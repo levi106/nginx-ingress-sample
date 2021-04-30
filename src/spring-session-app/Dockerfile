@@ -3,13 +3,12 @@ WORKDIR /app
 RUN apk update && \
     apk add --no-cache git
 COPY . .
-WORKDIR /app/src/spring-session-app
 RUN chmod +x gradlew
 RUN ./gradlew build --info
 
 FROM mcr.microsoft.com/java/jre-headless:11u8-zulu-alpine
 WORKDIR /app
-COPY --from=builder /app/src/spring-session-app/build/libs/spring-session-app-*.jar ./app.jar
+COPY --from=builder /app/build/libs/spring-session-app-*.jar ./app.jar
 
 EXPOSE 8080
 
