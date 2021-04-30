@@ -1,0 +1,34 @@
+name: deploy-ingress-controller
+
+on:
+  workflow_dispatch:
+
+env:
+  NAMESPACE: ingress
+  REPLICA_COUNT: 3
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Kubernetes set context
+        uses: Azure/aks-set-context@v1.1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          resource-group: ${{ secrets.RESOURCE_GROUP }}
+          cluster-name: ${{ secrets.CLUSTER_NAME }}
+      - name: Add the ingress-nginx repository
+        run: |
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+      - name: create namespace if doesn't exists
+        run: |
+          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o json | kubectl apply -f -
+      - name: Use Helm to deploy an NGINX ingress controller
+        run: |
+          helm install nginx-ingress ingress-nginx/ingress-nginx \
+            --namespace ${{ env.NAMESPACE }} \
+            --set controller.replicaCount=${{ env.REPLICA_COUNT }} \
+            --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+            --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
+            --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux
+            
