@@ -1,0 +1,28 @@
+name: deploy-spring-session-app
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'manifestas/spring-session-app.yaml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Azure Kubernetes set context
+        uses: Azure/aks-set-context@v1.1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          resource-group: ${{ secrets.RESOURCE_GROUP }}
+          cluster-name: ${{ secrets.CLUSTER_NAME }}
+          
+      - name: deploy application
+        run: |
+          kubectl apply -f manifests/spring-session-app.yaml
